@@ -10,7 +10,7 @@ type cubeGameSet = Partial<{
 
 type cubeGame = {
     ID: number
-    set: cubeGameSet[]
+    sets: cubeGameSet[]
 }
 
 const input = fs.readFileSync(path.join(__dirname, 'input.txt'), 'utf8').trim().split('\n');
@@ -22,10 +22,21 @@ const maximumCubes: cubeGameSet = {
 
 const remainingGames = input.filter((game) => {
     const results = getCubeValues(game);
-    return results.set.every(c => compareSetToMax(c, maximumCubes));
-}).map(game => getCubeValues(game))
-const idSum = remainingGames.map(g => g.ID).reduce((a, b) => a + b);
-console.log(idSum);
+    return results.sets.every(c => compareSetToMax(c, maximumCubes));
+}).map(game => getCubeValues(game).ID)
+const idSum = remainingGames.reduce((a, b) => a + b);
+
+const maximumGames = input.map((game) => {
+    const results = getCubeValues(game);
+    return getMaximumSet(results.sets);
+}).map((a) => {
+    const valueArr: number[] = [];
+    Object.values(a).forEach((v) => valueArr.push(v))
+    return valueArr.reduce((a,b) => a * b);
+}).reduce((a,b) => a + b);
+
+console.log(`Part 1: ${idSum}`);
+console.log(`Part 2: ${maximumGames}`);
 
 function getCubeValues(input: string): cubeGame {
     const gameID = +input.split(':')[0].split(' ')[1];
@@ -40,10 +51,22 @@ function getCubeValues(input: string): cubeGame {
     
     return {
         ID: gameID,
-        set: gameSets
+        sets: gameSets
     }
 }
 
 function compareSetToMax(set: cubeGameSet, maxValues: cubeGameSet): boolean {
     return Object.keys(set).every((setKey) => set[setKey] <= maxValues[setKey]);
+}
+
+function getMaximumSet(sets: cubeGameSet[]): cubeGameSet {
+    let maximumValues: cubeGameSet = {};
+    for(const set of sets) {
+        Object.keys(set).forEach((setKey) => {
+            if(!maximumValues[setKey]) maximumValues[setKey] = set[setKey];
+            else if(maximumValues[setKey] < set[setKey]) maximumValues[setKey] = set[setKey];
+        })
+    }
+
+    return maximumValues;
 }
